@@ -1,0 +1,24 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = "co.coinsmith.kafka.xchange.TickProducer"
+run {
+  if(project.hasProperty('args')) {
+    args project.args.split('\\s'); 
+  }
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile 'org.json:json:20140107'
+  compile 'org.apache.kafka:kafka_2.10:0.8.2.1'
+  compile 'com.xeiam.xchange:xchange-bitstamp:3.0.0'
+  compile 'com.xeiam.xchange:xchange-core:3.0.0'
+}
+
+task wrapper (type:Wrapper) {
+  gradleVersion = '2.3'
+}
