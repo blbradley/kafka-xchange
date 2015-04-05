@@ -1,13 +1,15 @@
 package co.coinsmith.kafka.xchange;
 
-import java.io.IOException;
-import java.lang.RuntimeException;
+import java.io.FileInputStream;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import static java.util.concurrent.TimeUnit.*;
 import org.json.JSONObject;
+
+import java.io.IOException;
+import java.lang.RuntimeException;
  
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -61,6 +63,9 @@ public class TickProducer {
         props.put("metadata.broker.list", "localhost:9092");
         props.put("serializer.class", "kafka.serializer.StringEncoder");
         props.put("request.required.acks", "1");
+
+        FileInputStream file = new FileInputStream("config.properties");
+        props.load(file);
  
         ProducerConfig config = new ProducerConfig(props);
 
