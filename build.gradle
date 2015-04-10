@@ -21,6 +21,14 @@ jar.manifest {
   attributes('Main-Class': mainClassName)
 }
 
+applicationDistribution.from(projectDir) {
+  include 'config.properties'
+}
+
+processResources {
+  exclude 'config.properties'
+}
+
 dependencies {
   compile 'org.json:json:20140107'
   compile 'org.apache.kafka:kafka_2.10:0.8.2.1'
