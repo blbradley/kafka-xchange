@@ -14,9 +14,16 @@ Configuration
 
 This is for Kakfa producer configuration options. Available options are [here](http://kafka.apache.org/documentation.html#producerconfigs).
 
-Example
--------
+Running locally
+---------------
+
+With a Kafka server running locally:
 
         PRODUCER_EXCHANGE='com.xeiam.xchange.bitstamp.BitstampExchange' ./gradlew run
 
 Stop the program using `Ctrl+C`, for now. 
+
+Running from distribution
+-------------------------
+
+        PRODUCER_EXCHANGE='com.xeiam.xchange.bitstamp.BitstampExchange' bin/kafka-xchange
