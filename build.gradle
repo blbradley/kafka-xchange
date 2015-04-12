@@ -3,6 +3,15 @@ apply plugin: 'application'
 
 mainClassName = "co.coinsmith.kafka.xchange.TickProducer"
 run {
+  def props = ['log4j.configuration' : 'file:config/log4j.properties']
+  props.each { prop, propVal ->
+    if(System.properties[prop] == null) {
+        systemProperties[prop] = propVal
+    } else {
+        systemProperties[prop] = System.properties[prop]
+    }
+  }
+
   if(project.hasProperty('args')) {
     args project.args.split('\\s'); 
   }
@@ -22,11 +31,7 @@ jar.manifest {
 }
 
 applicationDistribution.from(projectDir) {
-  include 'config.properties'
-}
-
-processResources {
-  exclude 'config.properties'
+  include 'config/*'
 }
 
 dependencies {
