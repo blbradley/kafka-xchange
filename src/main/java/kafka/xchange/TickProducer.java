@@ -17,11 +17,12 @@ import kafka.producer.ProducerConfig;
 
 import com.xeiam.xchange.Exchange;
 import com.xeiam.xchange.ExchangeFactory;
-import com.xeiam.xchange.bitstamp.BitstampExchange;
 import com.xeiam.xchange.service.polling.marketdata.PollingMarketDataService;
 import com.xeiam.xchange.dto.marketdata.Ticker;
 import com.xeiam.xchange.currency.CurrencyPair;
 import com.xeiam.xchange.utils.DateUtils;
+
+import kafka.xchange.ExchangeProvider;
 
 
 class TickerProducerRunnable implements Runnable {
@@ -45,7 +46,7 @@ class TickerProducerRunnable implements Runnable {
             throw new RuntimeException(e);
         }
         String msg = TickProducer.tickerToJSON(ticker).toString();
-        System.out.println(msg);
+        System.out.println(this.topicName + ':' + msg);
         KeyedMessage<String, String> data = new KeyedMessage<String, String>(this.topicName, msg);
         this.producer.send(data);
     }
@@ -69,22 +70,25 @@ public class TickProducer {
  
         ProducerConfig config = new ProducerConfig(props);
 
-        String exchangeClassName = System.getenv("PRODUCER_EXCHANGE");
-        Exchange exchange = ExchangeFactory.INSTANCE.createExchange(exchangeClassName);
-        PollingMarketDataService marketDataService = exchange.getPollingMarketDataService();
+        Iterator<Exchange> exchanges = ExchangeProvider.getInstance().getExchanges();
+        while(exchanges.hasNext()) {
+            Exchange exchangeClass = exchanges.next();
+            Exchange exchange = ExchangeFactory.INSTANCE.createExchange(exchangeClass.getClass().getName());
+            PollingMarketDataService marketDataService = exchange.getPollingMarketDataService();
 
-        String exchangeName = exchange.getExchangeSpecification().getExchangeName().toLowerCase();
-        String topicName = exchangeName + "-ticks";
+            String exchangeName = exchange.getExchangeSpecification().getExchangeName().toLowerCase();
+            String topicName = exchangeName + "-ticks";
 
-        Producer<String, String> producer = new Producer<String, String>(config);
+            Producer<String, String> producer = new Producer<String, String>(config);
 
-        TickerProducerRunnable tickerProducer = new TickerProducerRunnable(marketDataService, topicName, producer);
-        try {
-            ScheduledFuture<?> tickerProducerHandler = 
-              scheduler.scheduleAtFixedRate(tickerProducer, 0, 10, SECONDS);
-        } catch (Exception e) {
-            tickerProducer.close();
-            throw new RuntimeException(e);
+            TickerProducerRunnable tickerProducer = new TickerProducerRunnable(marketDataService, topicName, producer);
+            try {
+                ScheduledFuture<?> tickerProducerHandler =
+                  scheduler.scheduleAtFixedRate(tickerProducer, 0, 10, SECONDS);
+            } catch (Exception e) {
+                tickerProducer.close();
+                throw new RuntimeException(e);
+            }
         }
     }
 
