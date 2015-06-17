@@ -1,4 +1,4 @@
-package co.coinsmith.kafka.xchange;
+package kafka.xchange;
 
 import java.io.FileInputStream;
 import java.util.*;
