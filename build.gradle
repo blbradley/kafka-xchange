@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = "co.coinsmith.kafka.xchange.TickProducer"
+mainClassName = "kafka.xchange.TickProducer"
 run {
   def props = ['log4j.configuration' : 'file:config/log4j.properties']
   props.each { prop, propVal ->
