@@ -65,7 +65,7 @@ public class TickProducer {
         props.put("serializer.class", "kafka.serializer.StringEncoder");
         props.put("request.required.acks", "1");
 
-        FileInputStream file = new FileInputStream("config/config.properties");
+        FileInputStream file = new FileInputStream("config/producer.properties");
         props.load(file);
  
         ProducerConfig config = new ProducerConfig(props);

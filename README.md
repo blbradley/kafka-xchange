@@ -6,7 +6,7 @@ Kafka producer for data collection from cryptocurrency exchanges
 Configuration
 -------------
 
-**config.properties**
+**producer.properties**
 
 This is for Kakfa producer configuration options. Available options are [here](http://kafka.apache.org/documentation.html#producerconfigs).
 
