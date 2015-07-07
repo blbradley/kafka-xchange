@@ -65,18 +65,28 @@ public class TickProducer {
         props.put("serializer.class", "kafka.serializer.StringEncoder");
         props.put("request.required.acks", "1");
 
-        FileInputStream file = new FileInputStream("config/config.properties");
-        props.load(file);
+        FileInputStream producerConfigFile = new FileInputStream("config/producer.properties");
+        props.load(producerConfigFile);
  
         ProducerConfig config = new ProducerConfig(props);
+
+        FileInputStream configFile = new FileInputStream("config/config.properties");
+        props.load(configFile);
+
+        String activeExchangesProp = props.getProperty("exchanges.active");
+        List<String> activeExchanges = Arrays.asList(activeExchangesProp.split(","));
 
         Iterator<Exchange> exchanges = ExchangeProvider.getInstance().getExchanges();
         while(exchanges.hasNext()) {
             Exchange exchangeClass = exchanges.next();
             Exchange exchange = ExchangeFactory.INSTANCE.createExchange(exchangeClass.getClass().getName());
-            PollingMarketDataService marketDataService = exchange.getPollingMarketDataService();
 
             String exchangeName = exchange.getExchangeSpecification().getExchangeName().toLowerCase();
+            if (!activeExchanges.contains(exchangeName)) {
+                break;
+            }
+
+            PollingMarketDataService marketDataService = exchange.getPollingMarketDataService();
             String topicName = exchangeName + "-ticks";
 
             Producer<String, String> producer = new Producer<String, String>(config);
