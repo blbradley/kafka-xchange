@@ -10,6 +10,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.RuntimeException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
  
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -26,6 +29,7 @@ import kafka.xchange.ExchangeProvider;
 
 
 class TickerProducerRunnable implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(TickerProducerRunnable.class);
     private PollingMarketDataService marketDataService;
     private String loadedExchangeName;
     private String topicName;
@@ -48,7 +52,7 @@ class TickerProducerRunnable implements Runnable {
             throw new RuntimeException(e);
         }
         String msg = TickProducer.tickerToJSON(ticker).toString();
-        System.out.println(this.topicName + "-> " + this.loadedExchangeName + ':' + msg);
+        logger.debug("Preparing message for topic " +  "-> " + this.loadedExchangeName + ":" + msg);
         KeyedMessage<String, String> data = new KeyedMessage<String, String>(this.topicName, this.loadedExchangeName, msg);
         this.producer.send(data);
     }
