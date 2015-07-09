@@ -82,11 +82,17 @@ public class TickProducer {
         String configuredExchangesProp = props.getProperty("exchanges.active");
         List<String> configuredExchanges = Arrays.asList(configuredExchangesProp.split(","));
 
-        Iterator<Exchange> loadedExchanges = ExchangeProvider.getInstance().getExchanges();
-        while(loadedExchanges.hasNext()) {
-            Exchange loadedExchangeClass = loadedExchanges.next();
+        Iterator<Exchange> loadedExchangesIterator = ExchangeProvider.getInstance().getExchanges();
+        List<Exchange> loadedExchanges = new ArrayList<Exchange>();
+        while(loadedExchangesIterator.hasNext()) {
+            Exchange loadedExchangeClass = loadedExchangesIterator.next();
             Exchange loadedExchange = ExchangeFactory.INSTANCE.createExchange(loadedExchangeClass.getClass().getName());
+            loadedExchanges.add(loadedExchange);
+        }
 
+        loadedExchangesIterator = loadedExchanges.iterator();
+        while(loadedExchangesIterator.hasNext()) {
+            Exchange loadedExchange = loadedExchangesIterator.next();
             String loadedExchangeName = loadedExchange.getExchangeSpecification().getExchangeName().toLowerCase();
             if (!configuredExchanges.contains(loadedExchangeName)) {
                 break;
