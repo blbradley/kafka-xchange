@@ -27,14 +27,16 @@ import kafka.xchange.ExchangeProvider;
 
 class TickerProducerRunnable implements Runnable {
     private PollingMarketDataService marketDataService;
+    private String exchangeName;
     private String topicName;
     private Producer<String, String> producer;
 
     TickerProducerRunnable(PollingMarketDataService marketDataService,
-               String topicName,
+               String exchangeName,
                Producer<String, String> producer) {
         this.marketDataService = marketDataService;
-        this.topicName = topicName;
+        this.exchangeName = exchangeName;
+        this.topicName = "ticks";
         this.producer = producer;
     }
 
@@ -46,8 +48,8 @@ class TickerProducerRunnable implements Runnable {
             throw new RuntimeException(e);
         }
         String msg = TickProducer.tickerToJSON(ticker).toString();
-        System.out.println(this.topicName + ':' + msg);
-        KeyedMessage<String, String> data = new KeyedMessage<String, String>(this.topicName, msg);
+        System.out.println(this.topicName + "-> " + this.exchangeName + ':' + msg);
+        KeyedMessage<String, String> data = new KeyedMessage<String, String>(this.topicName, this.exchangeName, msg);
         this.producer.send(data);
     }
 
@@ -87,11 +89,10 @@ public class TickProducer {
             }
 
             PollingMarketDataService marketDataService = exchange.getPollingMarketDataService();
-            String topicName = exchangeName + "-ticks";
 
             Producer<String, String> producer = new Producer<String, String>(config);
 
-            TickerProducerRunnable tickerProducer = new TickerProducerRunnable(marketDataService, topicName, producer);
+            TickerProducerRunnable tickerProducer = new TickerProducerRunnable(marketDataService, exchangeName, producer);
             try {
                 ScheduledFuture<?> tickerProducerHandler =
                   scheduler.scheduleAtFixedRate(tickerProducer, 0, 10, SECONDS);
