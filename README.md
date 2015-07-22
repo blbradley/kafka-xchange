@@ -35,3 +35,16 @@ Running from distribution
 -------------------------
 
         bin/kafka-xchange
+
+Development
+-----------
+
+###Eclipse project files
+
+        # Generate Eclipse files
+        ./gradlew eclipse
+
+        # Clean Eclipse files
+        ./gradlew cleanEclipse
+
+More about this [here](https://docs.gradle.org/2.3/userguide/eclipse_plugin.html).
