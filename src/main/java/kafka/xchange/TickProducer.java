@@ -27,15 +27,15 @@ import kafka.xchange.ExchangeProvider;
 
 class TickerProducerRunnable implements Runnable {
     private PollingMarketDataService marketDataService;
-    private String exchangeName;
+    private String loadedExchangeName;
     private String topicName;
     private Producer<String, String> producer;
 
     TickerProducerRunnable(PollingMarketDataService marketDataService,
-               String exchangeName,
+               String loadedExchangeName,
                Producer<String, String> producer) {
         this.marketDataService = marketDataService;
-        this.exchangeName = exchangeName;
+        this.loadedExchangeName = loadedExchangeName;
         this.topicName = "ticks";
         this.producer = producer;
     }
@@ -48,8 +48,8 @@ class TickerProducerRunnable implements Runnable {
             throw new RuntimeException(e);
         }
         String msg = TickProducer.tickerToJSON(ticker).toString();
-        System.out.println(this.topicName + "-> " + this.exchangeName + ':' + msg);
-        KeyedMessage<String, String> data = new KeyedMessage<String, String>(this.topicName, this.exchangeName, msg);
+        System.out.println(this.topicName + "-> " + this.loadedExchangeName + ':' + msg);
+        KeyedMessage<String, String> data = new KeyedMessage<String, String>(this.topicName, this.loadedExchangeName, msg);
         this.producer.send(data);
     }
 
@@ -75,24 +75,24 @@ public class TickProducer {
         FileInputStream configFile = new FileInputStream("config/config.properties");
         props.load(configFile);
 
-        String activeExchangesProp = props.getProperty("exchanges.active");
-        List<String> activeExchanges = Arrays.asList(activeExchangesProp.split(","));
+        String configuredExchangesProp = props.getProperty("exchanges.active");
+        List<String> configuredExchanges = Arrays.asList(configuredExchangesProp.split(","));
 
-        Iterator<Exchange> exchanges = ExchangeProvider.getInstance().getExchanges();
-        while(exchanges.hasNext()) {
-            Exchange exchangeClass = exchanges.next();
-            Exchange exchange = ExchangeFactory.INSTANCE.createExchange(exchangeClass.getClass().getName());
+        Iterator<Exchange> loadedExchanges = ExchangeProvider.getInstance().getExchanges();
+        while(loadedExchanges.hasNext()) {
+            Exchange loadedExchangeClass = loadedExchanges.next();
+            Exchange loadedExchange = ExchangeFactory.INSTANCE.createExchange(loadedExchangeClass.getClass().getName());
 
-            String exchangeName = exchange.getExchangeSpecification().getExchangeName().toLowerCase();
-            if (!activeExchanges.contains(exchangeName)) {
+            String loadedExchangeName = loadedExchange.getExchangeSpecification().getExchangeName().toLowerCase();
+            if (!configuredExchanges.contains(loadedExchangeName)) {
                 break;
             }
 
-            PollingMarketDataService marketDataService = exchange.getPollingMarketDataService();
+            PollingMarketDataService marketDataService = loadedExchange.getPollingMarketDataService();
 
             Producer<String, String> producer = new Producer<String, String>(config);
 
-            TickerProducerRunnable tickerProducer = new TickerProducerRunnable(marketDataService, exchangeName, producer);
+            TickerProducerRunnable tickerProducer = new TickerProducerRunnable(marketDataService, loadedExchangeName, producer);
             try {
                 ScheduledFuture<?> tickerProducerHandler =
                   scheduler.scheduleAtFixedRate(tickerProducer, 0, 10, SECONDS);
