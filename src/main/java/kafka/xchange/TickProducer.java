@@ -62,7 +62,9 @@ class TickerProducerRunnable implements Runnable {
     }
 }
 
+
 public class TickProducer {
+    private static final Logger logger = LoggerFactory.getLogger(TickProducer.class);
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public static void main(String[] args) throws IOException {
@@ -84,10 +86,21 @@ public class TickProducer {
 
         Iterator<Exchange> loadedExchangesIterator = ExchangeProvider.getInstance().getExchanges();
         List<Exchange> loadedExchanges = new ArrayList<Exchange>();
+        List<String> loadedExchangeNames = new ArrayList<String>();
         while(loadedExchangesIterator.hasNext()) {
             Exchange loadedExchangeClass = loadedExchangesIterator.next();
             Exchange loadedExchange = ExchangeFactory.INSTANCE.createExchange(loadedExchangeClass.getClass().getName());
+            String loadedExchangeName = loadedExchange.getExchangeSpecification().getExchangeName().toLowerCase();
+            loadedExchangeNames.add(loadedExchangeName);
             loadedExchanges.add(loadedExchange);
+        }
+
+        Iterator<String> configuredExchangeIterator = configuredExchanges.iterator();
+        while(configuredExchangeIterator.hasNext()){
+            String configuredExchange = configuredExchangeIterator.next();
+            if(!loadedExchangeNames.contains(configuredExchange)){
+                logger.warn("exchanges.active has an invalid exchange: " + configuredExchange);
+            }
         }
 
         loadedExchangesIterator = loadedExchanges.iterator();
