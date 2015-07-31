@@ -10,6 +10,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.RuntimeException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
  
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -26,6 +29,7 @@ import kafka.xchange.ExchangeProvider;
 
 
 class TickerProducerRunnable implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(TickerProducerRunnable.class);
     private PollingMarketDataService marketDataService;
     private String loadedExchangeName;
     private String topicName;
@@ -48,7 +52,7 @@ class TickerProducerRunnable implements Runnable {
             throw new RuntimeException(e);
         }
         String msg = TickProducer.tickerToJSON(ticker).toString();
-        System.out.println(this.topicName + "-> " + this.loadedExchangeName + ':' + msg);
+        logger.debug("Preparing message for topic " +  "-> " + this.loadedExchangeName + ":" + msg);
         KeyedMessage<String, String> data = new KeyedMessage<String, String>(this.topicName, this.loadedExchangeName, msg);
         this.producer.send(data);
     }
@@ -58,7 +62,9 @@ class TickerProducerRunnable implements Runnable {
     }
 }
 
+
 public class TickProducer {
+    private static final Logger logger = LoggerFactory.getLogger(TickProducer.class);
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public static void main(String[] args) throws IOException {
@@ -78,11 +84,28 @@ public class TickProducer {
         String configuredExchangesProp = props.getProperty("exchanges.active");
         List<String> configuredExchanges = Arrays.asList(configuredExchangesProp.split(","));
 
-        Iterator<Exchange> loadedExchanges = ExchangeProvider.getInstance().getExchanges();
-        while(loadedExchanges.hasNext()) {
-            Exchange loadedExchangeClass = loadedExchanges.next();
+        Iterator<Exchange> loadedExchangesIterator = ExchangeProvider.getInstance().getExchanges();
+        List<Exchange> loadedExchanges = new ArrayList<Exchange>();
+        List<String> loadedExchangeNames = new ArrayList<String>();
+        while(loadedExchangesIterator.hasNext()) {
+            Exchange loadedExchangeClass = loadedExchangesIterator.next();
             Exchange loadedExchange = ExchangeFactory.INSTANCE.createExchange(loadedExchangeClass.getClass().getName());
+            String loadedExchangeName = loadedExchange.getExchangeSpecification().getExchangeName().toLowerCase();
+            loadedExchangeNames.add(loadedExchangeName);
+            loadedExchanges.add(loadedExchange);
+        }
 
+        Iterator<String> configuredExchangeIterator = configuredExchanges.iterator();
+        while(configuredExchangeIterator.hasNext()){
+            String configuredExchange = configuredExchangeIterator.next();
+            if(!loadedExchangeNames.contains(configuredExchange)){
+                logger.warn("exchanges.active has an invalid exchange: " + configuredExchange);
+            }
+        }
+
+        loadedExchangesIterator = loadedExchanges.iterator();
+        while(loadedExchangesIterator.hasNext()) {
+            Exchange loadedExchange = loadedExchangesIterator.next();
             String loadedExchangeName = loadedExchange.getExchangeSpecification().getExchangeName().toLowerCase();
             if (!configuredExchanges.contains(loadedExchangeName)) {
                 break;
