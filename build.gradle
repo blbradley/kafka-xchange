@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'eclipse'
 
-mainClassName = "kafka.xchange.TickProducer"
+mainClassName = "kafka.xchange.KafkaXchange"
 run {
   def props = ['log4j.configuration' : 'file:config/log4j.properties']
   props.each { prop, propVal ->

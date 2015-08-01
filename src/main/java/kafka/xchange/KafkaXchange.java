@@ -1,71 +1,31 @@
 package kafka.xchange;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.io.FileInputStream;
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import static java.util.concurrent.TimeUnit.*;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.lang.RuntimeException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
- 
+
 import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
 import com.xeiam.xchange.Exchange;
 import com.xeiam.xchange.ExchangeFactory;
 import com.xeiam.xchange.service.polling.marketdata.PollingMarketDataService;
-import com.xeiam.xchange.dto.marketdata.Ticker;
-import com.xeiam.xchange.currency.CurrencyPair;
-import com.xeiam.xchange.utils.DateUtils;
 
-import kafka.xchange.ExchangeProvider;
-
-
-class TickerProducerRunnable implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(TickerProducerRunnable.class);
-    private PollingMarketDataService marketDataService;
-    private String loadedExchangeName;
-    private String topicName;
-    private Producer<String, String> producer;
-
-    TickerProducerRunnable(PollingMarketDataService marketDataService,
-               String loadedExchangeName,
-               Producer<String, String> producer) {
-        this.marketDataService = marketDataService;
-        this.loadedExchangeName = loadedExchangeName;
-        this.topicName = "ticks";
-        this.producer = producer;
-    }
-
-    public void run() {
-        Ticker ticker = null;
-        try {
-            ticker = this.marketDataService.getTicker(CurrencyPair.BTC_USD);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        String msg = TickProducer.tickerToJSON(ticker).toString();
-        logger.debug("Preparing message for topic " +  "-> " + this.loadedExchangeName + ":" + msg);
-        KeyedMessage<String, String> data = new KeyedMessage<String, String>(this.topicName, this.loadedExchangeName, msg);
-        this.producer.send(data);
-    }
-
-    public void close() {
-        this.producer.close();
-    }
-}
-
-
-public class TickProducer {
-    private static final Logger logger = LoggerFactory.getLogger(TickProducer.class);
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+public class KafkaXchange {
+    static final Logger logger = LoggerFactory.getLogger(KafkaXchange.class);
+    static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public static void main(String[] args) throws IOException {
         Properties props = new Properties();
@@ -75,7 +35,7 @@ public class TickProducer {
 
         FileInputStream producerConfigFile = new FileInputStream("config/producer.properties");
         props.load(producerConfigFile);
- 
+
         ProducerConfig config = new ProducerConfig(props);
 
         FileInputStream configFile = new FileInputStream("config/config.properties");
@@ -126,19 +86,4 @@ public class TickProducer {
         }
     }
 
-    public static JSONObject tickerToJSON(Ticker ticker) {
-        JSONObject json = new JSONObject();
-
-        json.put("pair", ticker.getCurrencyPair());
-        json.put("last", ticker.getLast());
-        json.put("bid", ticker.getBid());
-        json.put("ask", ticker.getAsk());
-        json.put("high", ticker.getHigh());
-        json.put("low", ticker.getLow());
-        json.put("avg", ticker.getVwap());
-        json.put("volume", ticker.getVolume());
-        json.put("timestamp", DateUtils.toMillisNullSafe(ticker.getTimestamp()));
-
-        return json;
-    }
 }
