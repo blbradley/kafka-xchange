@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Config {
-    private final Logger logger = LoggerFactory.getLogger(ExchangeProvider.class);
+    private final Logger logger = LoggerFactory.getLogger(Config.class);
     private static Config config;
     Properties producerProps = new Properties();
     Properties configProps = new Properties();
