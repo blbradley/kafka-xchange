@@ -36,7 +36,7 @@ applicationDistribution.from(projectDir) {
 }
 
 dependencies {
-  compile 'org.json:json:20140107'
+  compile 'com.fasterxml.jackson.core:jackson-databind:2.4.0'
   compile 'org.apache.kafka:kafka_2.10:0.8.2.1'
   compile 'com.xeiam.xchange:xchange-bitstamp:3.0.0'
   compile 'com.xeiam.xchange:xchange-bitfinex:3.0.0'
