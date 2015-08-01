@@ -31,6 +31,7 @@ public class KafkaXchange {
         Config config = Config.getInstance();
 
         ProducerConfig producerConfig = new ProducerConfig(config.producerProps);
+        Producer<String, String> producer = new Producer<String, String>(producerConfig);
 
         String configuredExchangesProp = config.configProps.getProperty("exchanges.active");
         List<String> configuredExchanges = Arrays.asList(configuredExchangesProp.split(","));
@@ -63,9 +64,6 @@ public class KafkaXchange {
             }
 
             PollingMarketDataService marketDataService = loadedExchange.getPollingMarketDataService();
-
-            Producer<String, String> producer = new Producer<String, String>(producerConfig);
-
             TickerProducerRunnable tickerProducer = new TickerProducerRunnable(marketDataService, loadedExchangeName, producer);
             try {
                 ScheduledFuture<?> tickerProducerHandler =
