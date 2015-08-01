@@ -1,40 +1,29 @@
 package kafka.xchange;
 
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import static java.util.concurrent.TimeUnit.*;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.lang.RuntimeException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
-import com.xeiam.xchange.service.polling.marketdata.PollingMarketDataService;
+import kafka.javaapi.producer.Producer;
+
+import com.xeiam.xchange.Exchange;
 import com.xeiam.xchange.dto.marketdata.Ticker;
 import com.xeiam.xchange.currency.CurrencyPair;
-import com.xeiam.xchange.utils.DateUtils;
 
+interface TickerTopic {
+    static String topicName = "ticks";
+}
 
-class TickerProducerRunnable implements Runnable {
+class TickerProducerRunnable extends PollingExchangeProducerRunnable implements TickerTopic, ObjectMapperInjector {
     private static final Logger logger = LoggerFactory.getLogger(TickerProducerRunnable.class);
-    private PollingMarketDataService marketDataService;
-    private String loadedExchangeName;
-    private String topicName;
-    private Producer<String, String> producer;
 
-    TickerProducerRunnable(PollingMarketDataService marketDataService,
-               String loadedExchangeName,
-               Producer<String, String> producer) {
-        this.marketDataService = marketDataService;
-        this.loadedExchangeName = loadedExchangeName;
-        this.topicName = "ticks";
-        this.producer = producer;
+    TickerProducerRunnable(Producer<String, String> producer,
+            Exchange exchange) {
+        super(producer, exchange);
     }
 
     public void run() {
@@ -44,29 +33,12 @@ class TickerProducerRunnable implements Runnable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        String msg = tickerToJSON(ticker).toString();
-        logger.debug("Preparing message for topic " +  "-> " + this.loadedExchangeName + ":" + msg);
-        KeyedMessage<String, String> data = new KeyedMessage<String, String>(this.topicName, this.loadedExchangeName, msg);
-        this.producer.send(data);
-    }
-
-    public void close() {
-        this.producer.close();
-    }
-
-    public static JSONObject tickerToJSON(Ticker ticker) {
-        JSONObject json = new JSONObject();
-
-        json.put("pair", ticker.getCurrencyPair());
-        json.put("last", ticker.getLast());
-        json.put("bid", ticker.getBid());
-        json.put("ask", ticker.getAsk());
-        json.put("high", ticker.getHigh());
-        json.put("low", ticker.getLow());
-        json.put("avg", ticker.getVwap());
-        json.put("volume", ticker.getVolume());
-        json.put("timestamp", DateUtils.toMillisNullSafe(ticker.getTimestamp()));
-
-        return json;
+        String msg;
+        try {
+            msg = mapper.writeValueAsString(ticker);
+            send(TickerProducerRunnable.topicName, msg);
+        } catch (JsonProcessingException e) {
+            logger.error(e.getClass().getName() + ":" + e.getMessage());
+        }
     }
 }
