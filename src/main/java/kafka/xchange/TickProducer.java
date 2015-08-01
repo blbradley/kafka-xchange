@@ -108,7 +108,7 @@ public class TickProducer {
             Exchange loadedExchange = loadedExchangesIterator.next();
             String loadedExchangeName = loadedExchange.getExchangeSpecification().getExchangeName().toLowerCase();
             if (!configuredExchanges.contains(loadedExchangeName)) {
-                break;
+                continue;
             }
 
             PollingMarketDataService marketDataService = loadedExchange.getPollingMarketDataService();
