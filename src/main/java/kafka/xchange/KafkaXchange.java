@@ -2,13 +2,10 @@ package kafka.xchange;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -21,7 +18,6 @@ import kafka.producer.ProducerConfig;
 
 import com.xeiam.xchange.Exchange;
 import com.xeiam.xchange.ExchangeFactory;
-import com.xeiam.xchange.service.polling.marketdata.PollingMarketDataService;
 
 public class KafkaXchange {
     static final Logger logger = LoggerFactory.getLogger(KafkaXchange.class);
@@ -63,8 +59,7 @@ public class KafkaXchange {
                 continue;
             }
 
-            PollingMarketDataService marketDataService = loadedExchange.getPollingMarketDataService();
-            TickerProducerRunnable tickerProducer = new TickerProducerRunnable(marketDataService, loadedExchangeName, producer);
+            TickerProducerRunnable tickerProducer = new TickerProducerRunnable(producer, loadedExchange);
             try {
                 ScheduledFuture<?> tickerProducerHandler =
                   scheduler.scheduleAtFixedRate(tickerProducer, 0, 10, SECONDS);

@@ -1,9 +1,5 @@
 package kafka.xchange;
 
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import static java.util.concurrent.TimeUnit.*;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -13,28 +9,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
 
-import com.xeiam.xchange.service.polling.marketdata.PollingMarketDataService;
+import com.xeiam.xchange.Exchange;
 import com.xeiam.xchange.dto.marketdata.Ticker;
 import com.xeiam.xchange.currency.CurrencyPair;
 import com.xeiam.xchange.utils.DateUtils;
 
+interface TickerTopic {
+    static String topicName = "ticks";
+}
 
-class TickerProducerRunnable implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(TickerProducerRunnable.class);
-    private PollingMarketDataService marketDataService;
-    private String loadedExchangeName;
-    private String topicName;
-    private Producer<String, String> producer;
+class TickerProducerRunnable extends PollingExchangeProducerRunnable implements TickerTopic {
 
-    TickerProducerRunnable(PollingMarketDataService marketDataService,
-               String loadedExchangeName,
-               Producer<String, String> producer) {
-        this.marketDataService = marketDataService;
-        this.loadedExchangeName = loadedExchangeName;
-        this.topicName = "ticks";
-        this.producer = producer;
+    TickerProducerRunnable(Producer<String, String> producer,
+            Exchange exchange) {
+        super(producer, exchange);
     }
 
     public void run() {
@@ -45,13 +34,7 @@ class TickerProducerRunnable implements Runnable {
             throw new RuntimeException(e);
         }
         String msg = tickerToJSON(ticker).toString();
-        logger.debug("Preparing message for topic " +  "-> " + this.loadedExchangeName + ":" + msg);
-        KeyedMessage<String, String> data = new KeyedMessage<String, String>(this.topicName, this.loadedExchangeName, msg);
-        this.producer.send(data);
-    }
-
-    public void close() {
-        this.producer.close();
+        send(TickerProducerRunnable.topicName, msg);
     }
 
     public static JSONObject tickerToJSON(Ticker ticker) {
