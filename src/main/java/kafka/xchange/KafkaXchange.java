@@ -27,21 +27,12 @@ public class KafkaXchange {
     static final Logger logger = LoggerFactory.getLogger(KafkaXchange.class);
     static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-    public static void main(String[] args) throws IOException {
-        Properties props = new Properties();
-        props.put("metadata.broker.list", "localhost:9092");
-        props.put("serializer.class", "kafka.serializer.StringEncoder");
-        props.put("request.required.acks", "1");
+    public static void main(String[] args) {
+        Config config = Config.getInstance();
 
-        FileInputStream producerConfigFile = new FileInputStream("config/producer.properties");
-        props.load(producerConfigFile);
+        ProducerConfig producerConfig = new ProducerConfig(config.producerProps);
 
-        ProducerConfig config = new ProducerConfig(props);
-
-        FileInputStream configFile = new FileInputStream("config/config.properties");
-        props.load(configFile);
-
-        String configuredExchangesProp = props.getProperty("exchanges.active");
+        String configuredExchangesProp = config.configProps.getProperty("exchanges.active");
         List<String> configuredExchanges = Arrays.asList(configuredExchangesProp.split(","));
 
         Iterator<Exchange> loadedExchangesIterator = ExchangeProvider.getInstance().getExchanges();
@@ -73,7 +64,7 @@ public class KafkaXchange {
 
             PollingMarketDataService marketDataService = loadedExchange.getPollingMarketDataService();
 
-            Producer<String, String> producer = new Producer<String, String>(config);
+            Producer<String, String> producer = new Producer<String, String>(producerConfig);
 
             TickerProducerRunnable tickerProducer = new TickerProducerRunnable(marketDataService, loadedExchangeName, producer);
             try {
