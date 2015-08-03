@@ -35,6 +35,10 @@ applicationDistribution.from(projectDir) {
   include 'config/*'
 }
 
+distTar {
+  compression = Compression.GZIP
+}
+
 dependencies {
   compile 'com.fasterxml.jackson.core:jackson-databind:2.4.0'
   compile 'org.apache.kafka:kafka_2.10:0.8.2.1'
