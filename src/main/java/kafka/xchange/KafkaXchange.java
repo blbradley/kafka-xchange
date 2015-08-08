@@ -62,7 +62,7 @@ public class KafkaXchange {
             TickerProducerRunnable tickerProducer = new TickerProducerRunnable(producer, loadedExchange);
             try {
                 ScheduledFuture<?> tickerProducerHandler =
-                  scheduler.scheduleAtFixedRate(tickerProducer, 0, 10, SECONDS);
+                  scheduler.scheduleAtFixedRate(tickerProducer, 0, config.getPollingPeriod(), SECONDS);
             } catch (Exception e) {
                 tickerProducer.close();
                 throw new RuntimeException(e);
