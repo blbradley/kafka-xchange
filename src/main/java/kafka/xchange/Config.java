@@ -39,4 +39,8 @@ public class Config {
 
         return props;
     }
+
+    public int getPollingPeriod() {
+        return Integer.parseInt(configProps.getProperty("polling_period"));
+    }
 }
