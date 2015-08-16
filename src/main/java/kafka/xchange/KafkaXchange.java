@@ -2,10 +2,13 @@ package kafka.xchange;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -24,12 +27,21 @@ public class KafkaXchange {
     static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public static void main(String[] args) {
-        Config config = Config.getInstance();
+        Properties configProps = new Properties();
+        configProps = readPropertiesFile(configProps, "config/config.properties");
+        Config config = new Config(configProps);
 
-        ProducerConfig producerConfig = new ProducerConfig(config.producerProps);
+        Properties producerProps = new Properties();
+        producerProps.put("metadata.broker.list", "localhost:9092");
+        producerProps.put("serializer.class", "kafka.serializer.StringEncoder");
+        producerProps.put("request.required.acks", "1");
+
+        producerProps = readPropertiesFile(producerProps, "config/producer.properties");
+
+        ProducerConfig producerConfig = new ProducerConfig(producerProps);
         Producer<String, String> producer = new Producer<String, String>(producerConfig);
 
-        String configuredExchangesProp = config.configProps.getProperty("exchanges.active");
+        String configuredExchangesProp = configProps.getProperty("exchanges.active");
         List<String> configuredExchanges = Arrays.asList(configuredExchangesProp.split(","));
 
         Iterator<Exchange> loadedExchangesIterator = ExchangeProvider.getInstance().getExchanges();
@@ -70,4 +82,14 @@ public class KafkaXchange {
         }
     }
 
+    public static Properties readPropertiesFile(Properties props, String path) {
+        try {
+            FileInputStream propertiesFile = new FileInputStream(path);
+            props.load(propertiesFile);
+        } catch (IOException e) {
+            logger.error(e.getClass().getName() + ":" + e.getMessage());
+        }
+
+        return props;
+    }
 }
