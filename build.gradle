@@ -46,6 +46,8 @@ dependencies {
   compile 'com.xeiam.xchange:xchange-bitfinex:3.0.0'
   compile 'com.xeiam.xchange:xchange-coinbase:3.0.0'
   compile 'com.xeiam.xchange:xchange-core:3.0.0'
+
+  testCompile 'junit:junit:4.12'
 }
 
 task wrapper (type:Wrapper) {

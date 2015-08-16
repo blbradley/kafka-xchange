@@ -11,6 +11,9 @@ public class Config {
 
     Config(Properties props) {
         pollingPeriod = Integer.parseInt(props.getProperty("polling_period"));
+        if (pollingPeriod <= 0) {
+            throw new Error("polling_period should be greater than zero.");
+        }
     }
 
     public int getPollingPeriod() {
