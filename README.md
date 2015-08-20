@@ -3,6 +3,8 @@ kafka-xchange
 
 Kafka producer for data collection from cryptocurrency exchanges
 
+![Travis CI Status](https://travis-ci.org/blbradley/kafka-xchange.svg)
+
 Configuration
 -------------
 
