@@ -50,6 +50,12 @@ public class ConfigTest {
     }
 
     @Test
+    public void testLoadingAllConfiguredExchanges() {
+       Config config = new Config(props); 
+       assertTrue(exchanges.values().containsAll(config.getExchanges()));
+    }
+
+    @Test
     public void testLoadingSomeConfiguredExchanges() {
         props.setProperty("exchanges.active", "exchange1");
 
