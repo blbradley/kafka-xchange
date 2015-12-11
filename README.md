@@ -1,3 +1,8 @@
+# THIS PROJECT IS NO LONGER MAINTAINED
+
+## Please see [Kafka Cryptocoin](https://github.com/blbradley/kafka-cryptocoin) for the replacement.
+
+
 kafka-xchange
 =============
 
